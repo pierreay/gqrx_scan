@@ -3,6 +3,7 @@ import telnetlib
 import csv
 import time
 import pandas as pd
+import os
 
 class Scanner:
 
@@ -227,4 +228,5 @@ class Scanner:
 if __name__ == "__main__":
     scanner = Scanner(signal_strength=-60)
     scanner.load()
-    scanner.scan()
+    scanner.scan()    # Read frequencies from bookmarks:
+    scanner.read_bookmarks("{}/.config/gqrx/bookmarks.csv".format(os.getenv("HOME")))
