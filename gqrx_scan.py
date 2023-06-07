@@ -7,10 +7,11 @@ import os
 
 class Scanner:
 
-    def __init__(self, hostname='127.0.0.1', port=7356, wait_time=5, signal_strength=-55):
+    def __init__(self, hostname='127.0.0.1', port=7356, scan_time=0.35, lock_time=5, signal_strength=-55):
         self.host = hostname
         self.port = port
-        self.wait_time = wait_time
+        self.scan_time = scan_time
+        self.lock_time = lock_time
         self.signal_strength = signal_strength
         self.freqs = None
         self.mode_map = {'Narrow FM' : 'FM',
@@ -90,7 +91,7 @@ class Scanner:
                     self._set_freq(freq)
                     self._set_mode(self.freqs[freq]['mode'])
                     self._set_squelch(self.signal_strength)
-                    time.sleep(0.35)
+                    time.sleep(self.scan_time)
                     level = float(self._get_level())
                     if level >= self.signal_strength:
                         last_sig_time = pd.Timestamp.now()
@@ -98,7 +99,7 @@ class Scanner:
                             if float(self._get_level()) >= self.signal_strength:
                                 last_sig_time = pd.Timestamp.now()
 
-                            if pd.Timestamp.now() - last_sig_time > pd.Timedelta(f"{self.wait_time}S"):
+                            if pd.Timestamp.now() - last_sig_time > pd.Timedelta(f"{self.lock_time}S"):
                                 break
 
     def scan_range(self, minfreq, maxfreq, mode, step=500, save_path=None):
@@ -226,7 +227,12 @@ class Scanner:
         return self._update('m')
 
 if __name__ == "__main__":
-    scanner = Scanner(signal_strength=-60)
-    scanner.load()
-    scanner.scan()    # Read frequencies from bookmarks:
+    # scan_time: time during we will listen a frequency.
+    # lock_time: time during we will lock on a frequency if an activity is detected.
+    # signal_strength: squelch level to detect an activity (using audio output of GQRX).
+    scanner = Scanner(scan_time=0.35, lock_time=4, signal_strength=-60)
+    # Read frequencies from CSV:
+    # scanner.load('freq.csv')
+    # Read frequencies from bookmarks:
     scanner.read_bookmarks("{}/.config/gqrx/bookmarks.csv".format(os.getenv("HOME")))
+    scanner.scan()
