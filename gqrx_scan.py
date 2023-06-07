@@ -94,12 +94,16 @@ class Scanner:
                     time.sleep(self.scan_time)
                     level = float(self._get_level())
                     if level >= self.signal_strength:
+                        print("{} dBFS >= {} dBFS @ {} Hz".format(level, self.signal_strength, freq))
+                        if self.lock_time:
+                            print("Lock @ {} Hz -> {} s".format(freq, self.lock_time))
                         last_sig_time = pd.Timestamp.now()
                         while True:
                             if float(self._get_level()) >= self.signal_strength:
                                 last_sig_time = pd.Timestamp.now()
 
                             if pd.Timestamp.now() - last_sig_time > pd.Timedelta(f"{self.lock_time}S"):
+                                print("Restart scanning")
                                 break
 
     def scan_range(self, minfreq, maxfreq, mode, step=500, save_path=None):
